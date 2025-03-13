@@ -1,3 +1,8 @@
+//Este arquivo JavaScript é responsável por capturar a entrada do usuário no 
+// index.html e enviar a mensagem para o servidor usando uma requisição AJAX 
+// (usualmente via fetch). Ele também recebe a resposta do 
+// servidor e a exibe na interface do usuário.
+
 // Referências aos elementos HTML
 const chatButton = document.getElementById("chat-button");
 const chatContainer = document.getElementById("chat-container");
@@ -16,7 +21,8 @@ chatButton.addEventListener("click", () => {
     // Se for a primeira vez que o chat é aberto, iniciar a conversa
     if (chatMessages.children.length === 0) {
         showTypingIndicator();
-        
+
+        //invocando o chatbot.php atraves de uma requisição fetch
         setTimeout(() => {
             fetch("chatbot.php", {
                 method: "POST",
@@ -31,9 +37,29 @@ chatButton.addEventListener("click", () => {
     }
 });
 
-// Evento para fechar o chat quando o botão de fechar é clicado
+/*Evento para fechar o chat quando o botão de fechar é clicado
 closeChat.addEventListener("click", () => {
     chatContainer.style.display = "none";
+});
+*/
+
+closeChat.addEventListener("click", () => {
+    chatContainer.style.display = "none";
+
+    // Enviar requisição para encerrar a sessão no PHP
+    fetch("logout.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" }
+    })
+    .then(response => response.text())
+    .then(data => {
+        alert(data); // Exibir mensagem do servidor
+        location.reload(); // Recarregar a página para garantir que a sessão foi destruída
+    })
+    .catch(error => {
+        alert("Erro ao encerrar a sessão!");
+        console.error("Erro ao encerrar a sessão:", error);
+    });
 });
 
 // Eventos para enviar a mensagem quando o botão de enviar é clicado ou a tecla Enter é pressionada

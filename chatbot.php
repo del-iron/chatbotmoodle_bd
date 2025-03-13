@@ -1,6 +1,14 @@
 <?php
 header("Content-Type: text/html; charset=UTF-8");
 session_start();  // Inicia a sessão
+/*
+session_unset();
+session_destroy();
+*/
+/*Este arquivo PHP recebe a requisição AJAX enviada pelo chatbot.js, 
+processa a mensagem do usuário, busca a resposta no banco de dados 
+(usando paramentros.php para a conexão com o banco de dados), 
+e retorna a resposta para o chatbot.js.*/
 
 include __DIR__ . '/paramentros.php';
 
