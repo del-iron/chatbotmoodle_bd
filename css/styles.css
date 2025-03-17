@@ -7,6 +7,7 @@ body {
 
 /* Estilos para o botão de chat */
 #chat-button {
+    
     position: fixed;
     bottom: 20px;
     right: 20px;
@@ -47,23 +48,25 @@ body {
     justify-content: space-between;
 }
 
+/* Estilos para o título do chat */
 #chat-header-left {
     display: flex;
     align-items: center;
 }
 
+/* Estilos para a imagem do chat */
 #chat-header img {
     width: 35px;
     height: 35px;
     border-radius: 50%;
     margin-right: 10px;
 }
-
+/* Estilos para o título do chat */
 #chat-title {
     display: flex;
     flex-direction: column;
 }
-
+/* Estilos para o status do chat */
 #chat-status {
     font-size: 12px;
     color: #d1e7fd;
@@ -93,7 +96,60 @@ body {
     display: flex;
     flex-direction: column;
 }
+/* Estilos para as mensagens do chat */
+#chat-messages .message {
+    display: flex;
+    align-items: center;
+    margin: 5px 0;
+    padding: 8px;
+    border-radius: 15px;
+    max-width: 80%;
+}
+/* Estilos para as mensagens do usuário */
+#chat-messages .user {
+    background: #d1e7fd;
+    align-self: flex-end;
+    text-align: right;
+}
 
+/* Estilos para as mensagens do bot */
+#chat-messages .bot {
+    background: #f1f1f1;
+    align-self: flex-start;
+    text-align: left;
+    display: flex;
+    align-items: center;
+}
+/* Estilos para a imagem do bot */
+#chat-messages .bot img {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+/* Estilos para a área de entrada de texto do chat */
+#chat-input {
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid #ddd;
+}
+/* Estilos para a entrada de texto do usuário */
+#user-input {
+    flex: 1;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+/* Estilos para o botão de envio de mensagem */
+#send-button {
+    background: #0073aa;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    margin-left: 5px;
+    cursor: pointer;
+}
+/* Animação de fade-in */   
 .message {
     display: flex;
     align-items: center;
@@ -103,12 +159,14 @@ body {
     max-width: 80%;
 }
 
+/* Estilos para as mensagens do usuário */  
 .user {
     background: #d1e7fd;
     align-self: flex-end;
     text-align: right;
 }
 
+/* Estilos para as mensagens do bot */  
 .bot {
     background: #f1f1f1;
     align-self: flex-start;
@@ -117,6 +175,7 @@ body {
     align-items: center;
 }
 
+/* Estilos para a imagem do bot */  
 .bot img {
     width: 30px;
     height: 30px;
@@ -131,13 +190,14 @@ body {
     border-top: 1px solid #ddd;
 }
 
+/* Estilos para a entrada de texto do usuário */
 #user-input {
     flex: 1;
     padding: 5px;
     border: 1px solid #ccc;
     border-radius: 3px;
 }
-
+/* Estilos para o botão de envio de mensagem */
 #send-button {
     background: #0073aa;
     color: white;

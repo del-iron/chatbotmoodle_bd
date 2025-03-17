@@ -1,14 +1,6 @@
 <?php
 header("Content-Type: text/html; charset=UTF-8");
 session_start();  // Inicia a sessão
-/*
-session_unset();
-session_destroy();
-*/
-/*Este arquivo PHP recebe a requisição AJAX enviada pelo chatbot.js, 
-processa a mensagem do usuário, busca a resposta no banco de dados 
-(usando paramentros.php para a conexão com o banco de dados), 
-e retorna a resposta para o chatbot.js.*/
 
 include __DIR__ . '/paramentros.php';
 
@@ -66,13 +58,10 @@ if ($resposta === null) {
 // Simula resposta humana
 usleep(rand(2000000, 4000000)); // Entre 2 e 4 segundos
 
-$palavras_chave = $message;  // A mensagem do usuário é a palavra-chave
-$pergunta = $message;  // A pergunta pode ser a própria mensagem do usuário
-
-$stmt = $pdo->prepare("INSERT INTO respostas (palavras_chave, pergunta, resposta) VALUES (?, ?, ?)");
-$stmt->execute([$palavras_chave, $pergunta, $resposta]);
+// Inserir a mensagem do usuário e a resposta do bot no banco de dados
+$stmt = $pdo->prepare("INSERT INTO messages (user_message, bot_response) VALUES (?, ?)");
+$stmt->execute([$message, $resposta]);
 
 // Envia a resposta para o usuário
 paramentros::send_response($resposta);
 ?>
-

@@ -12,6 +12,7 @@ const sendButton = document.getElementById("send-button");
 const chatMessages = document.getElementById("chat-messages");
 const chatStatus = document.getElementById("chat-status");
 
+// Variável para controlar se o bot está digitando
 let isBotTyping = false;
 
 // Evento para abrir o chat quando o botão de chat é clicado
@@ -20,19 +21,26 @@ chatButton.addEventListener("click", () => {
     
     // Se for a primeira vez que o chat é aberto, iniciar a conversa
     if (chatMessages.children.length === 0) {
+        // Mostrar indicador de digitação com animação
         showTypingIndicator();
 
         //invocando o chatbot.php atraves de uma requisição fetch
         setTimeout(() => {
+            // Enviar requisição para iniciar a conversa no PHP
             fetch("chatbot.php", {
+                //enviando o método POST
                 method: "POST",
+                //enviando o cabeçalho Content-Type
                 headers: { "Content-Type": "application/x-www-form-urlencoded" }
             })
+            //recebendo a resposta do servidor
             .then(response => response.text())
+            //exibindo a mensagem do servidor
             .then(data => {
                 hideTypingIndicator();
                 displayBotMessageWithTypingEffect(data);
             });
+            //tratando o erro
         }, 1000);
     }
 });
@@ -43,19 +51,24 @@ closeChat.addEventListener("click", () => {
 });
 */
 
+// Evento para fechar o chat quando o botão de fechar é clicado
 closeChat.addEventListener("click", () => {
     chatContainer.style.display = "none";
 
     // Enviar requisição para encerrar a sessão no PHP
     fetch("logout.php", {
+        //enviando o método POST
         method: "POST",
+        //enviando o cabeçalho Content-Type
         headers: { "Content-Type": "application/x-www-form-urlencoded" }
     })
+    //recebendo a resposta do servidor
     .then(response => response.text())
     .then(data => {
         alert(data); // Exibir mensagem do servidor
         location.reload(); // Recarregar a página para garantir que a sessão foi destruída
     })
+    //tratando o erro 
     .catch(error => {
         alert("Erro ao encerrar a sessão!");
         console.error("Erro ao encerrar a sessão:", error);
@@ -64,16 +77,20 @@ closeChat.addEventListener("click", () => {
 
 // Eventos para enviar a mensagem quando o botão de enviar é clicado ou a tecla Enter é pressionada
 sendButton.addEventListener("click", sendMessage);
+//evento para enviar a mensagem quando a tecla Enter é pressionada
 userInput.addEventListener("keypress", (e) => {
     if (e.key === "Enter") sendMessage();
 });
 
 // Função para enviar a mensagem do usuário
 function sendMessage() {
+    // Pegar a mensagem do usuário e limpar o campo de entrada
     let message = userInput.value.trim();
+    //verificar se a mensagem está vazia ou se o bot está digitando
     if (message === "" || isBotTyping) return;
-    
+    //adicionar a mensagem do usuário
     addMessage(message, "user");
+    //limpar o campo de entrada
     userInput.value = "";
     
     // Mostrar indicador de digitação com animação
@@ -81,36 +98,52 @@ function sendMessage() {
     
     // Enviar mensagem para o backend
     fetch("chatbot.php", {
+        //enviando o método POST
         method: "POST",
+        //enviando o cabeçalho Content
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        //enviando a mensagem
         body: "message=" + encodeURIComponent(message)
     })
+    //recebendo a resposta do servidor
     .then(response => response.text())
+    //exibindo a mensagem do servidor
     .then(data => {
         // Mantemos o indicador de "digitando" por pelo menos 2 segundos
         // para dar a impressão de que alguém está realmente digitando
         setTimeout(() => {
+            //esconder o indicador de digitação
             hideTypingIndicator();
+            //adicionar a mensagem do bot
             displayBotMessageWithTypingEffect(data);
+            //exibir a mensagem do bot
         }, 2000);
     });
 }
 
 // Função para adicionar uma mensagem na caixa de mensagens
 function addMessage(text, type) {
+    //criar a div da mensagem
     let msg = document.createElement("div");
+    //adicionar a classe da mensagem
     msg.classList.add("message", type);
-
+    
+    //verificar o tipo da mensagem
     if (type === "bot") {
-        let img = document.createElement("img");
-        img.src = "https://i.imgur.com/6RK7NQp.png";
-        msg.appendChild(img);
+        // Remover a imagem do bot
+        // let img = document.createElement("img");
+        // img.src = "https://i.imgur.com/6RK7NQp.png";
+        // msg.appendChild(img);
     }
-
+    //criar o span
     let span = document.createElement("span");
+    //adicionar o texto
     span.textContent = text;
+    //adicionar o span na mensagem
     msg.appendChild(span);
+    //adicionar a mensagem na caixa de mensagens
     chatMessages.appendChild(msg);
+    //rolar a caixa de mensagens para o final
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
@@ -126,12 +159,13 @@ function showTypingIndicator() {
             clearInterval(typingInterval);
             return;
         }
-        
+        // Alternar entre 0, 1, 2 e 3 pontos
         dots = (dots + 1) % 4;
         let dotsText = "";
         for (let i = 0; i < dots; i++) {
             dotsText += ".";
         }
+        // Atualizar o texto do indicador de digitação
         chatStatus.textContent = "Digitando" + dotsText;
     }, 500);
 }
@@ -147,29 +181,33 @@ function displayBotMessageWithTypingEffect(text) {
     let msg = document.createElement("div");
     msg.classList.add("message", "bot");
     
-    let img = document.createElement("img");
-    img.src = "https://i.imgur.com/6RK7NQp.png";
-    msg.appendChild(img);
+     // Remover a imagem do bot
+    // let img = document.createElement("img");
+    // img.src = "https://i.imgur.com/6RK7NQp.png";
+    // msg.appendChild(img);
     
     let span = document.createElement("span");
     span.textContent = "";
     msg.appendChild(span);
-    
+    //adicionar a mensagem na caixa de mensagens
     chatMessages.appendChild(msg);
     
     // Efeito de digitação caractere por caractere com velocidade variável
     let i = 0;
-    
+
+    //função para digitar o caractere
     function typeCharacter() {
         if (i < text.length) {
             span.textContent += text.charAt(i);
             i++;
+            //rolar a caixa de mensagens para o final
             chatMessages.scrollTop = chatMessages.scrollHeight;
             
             // Velocidade de digitação variável para parecer mais humano
             // Mais rápido em partes do meio, mais lento no início e fim
             let typingSpeed;
             
+            // Verificar se o caractere está no início ou fim da mensagem
             if (i < 5 || i > text.length - 10) {
                 // Mais lento no início e fim da mensagem
                 typingSpeed = Math.random() * 70 + 50; // 50-120ms
@@ -182,10 +220,10 @@ function displayBotMessageWithTypingEffect(text) {
             if (['.', '!', '?', ',', ':'].includes(text.charAt(i - 1))) {
                 typingSpeed += 300; // Pausa extra em pontuação
             }
-            
+            //chamando a função novamente
             setTimeout(typeCharacter, typingSpeed);
         }
     }
-    
+    //chamando a função
     typeCharacter();
 }

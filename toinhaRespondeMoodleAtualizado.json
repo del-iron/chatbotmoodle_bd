@@ -168,7 +168,7 @@
     "pergunta": "Como configurar notificações automáticas para senhas prestes a expirar?",
     "resposta": "Ative a política de expiração de senhas em 'Administração do site > Segurança > Políticas do site'. Configure notificações em 'Administração do site > Mensagens > Notificações > Gerenciar tipos de notificação'. Defina a tarefa agendada 'Enviar notificações de expiração de senha' para alertar os usuários com antecedência.",
     "contexto": "Notificações automáticas ajudam os usuários a manterem suas contas seguras, evitando que o acesso seja interrompido devido a senhas expiradas."
-	}
+	},
 	{
     "pergunta": "Como alterar a senha no Moodle?",
     "resposta": "Para alterar a senha, acesse 'Preferências' no menu do usuário, selecione 'Alterar senha', insira a senha atual, a nova senha e confirme a nova senha. Clique em 'Salvar mudanças'.",
