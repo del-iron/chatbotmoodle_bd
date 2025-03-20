@@ -1,9 +1,10 @@
 /**
+ /*
  * Transforma a consulta do usuário em um array de palavras e identifica as palavras-chave.
- * @param {string} query - A consulta do usuário.
+ * @param {string} query - A consulta do usuário // 
  * @param {Array<string>} keywords - As palavras-chave para comparar.
  * @returns {Array<string>} - As palavras da consulta que correspondem às palavras-chave.
- */
+
 function processQuery(query, keywords) {
   // Transforma a consulta em um array de palavras
   const words = query.toLowerCase().split(' ');
@@ -20,3 +21,4 @@ const keywords = ["docker-compose", "Moodle", "configurar"];
 const result = processQuery(userQuery, keywords);
 
 console.log(result); // Output: ["docker-compose", "Moodle", "configurar"]
+ */

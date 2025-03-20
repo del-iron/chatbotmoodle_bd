@@ -20,21 +20,58 @@ if (!isset($_SESSION["chat_started"])) {
 // Obtém a mensagem do usuário
 $message = isset($_POST["message"]) ? strtolower(trim($_POST["message"])) : "";
 
+// Transforma a mensagem em um array de palavras
+$words = explode(' ', $message);
+
 // Define o nome do usuário
 $user_name = paramentros::DEFAULT_USER_NAME;
 
-// Função para buscar resposta baseada em palavras-chave e pergunta no banco de dados
+// Define o ID do curso
 $idCurso = 18;
-function buscar_resposta($pdo, $message, $idCurso) {
-    $stmt = $pdo->prepare("SELECT * FROM respostas WHERE (FIND_IN_SET(?, palavras_chave) OR pergunta LIKE ?) AND ID_CURSO = ?");
-    $stmt->execute([$message, "%$message%", $idCurso]);
+
+// Obtém a conexão com o banco de dados
+$pdo = paramentros::getPDO();
+
+if (!$pdo) {
+    // Se não houver conexão com o banco de dados, envia uma mensagem de erro
+    paramentros::send_response("Erro ao conectar ao banco de dados. Tente novamente mais tarde.");
+    exit;
+}
+
+function buscar_resposta($pdo, $words, $idCurso) {
+    // Construir a consulta SQL
+    $sql = "SELECT * FROM respostas WHERE (";
+    
+    // Adicionar condições para FIND_IN_SET
+    $findInSetConditions = array_map(function($word) {
+        return "FIND_IN_SET(?, palavras_chave)";
+    }, $words);
+    $sql .= implode(' OR ', $findInSetConditions);
+    
+    // Adicionar condições para LIKE
+    $sql .= " OR ";
+    $likeConditions = array_map(function($word) {
+        return "pergunta LIKE ?";
+    }, $words);
+    $sql .= implode(' OR ', $likeConditions);
+    
+    // Adicionar filtro por ID_CURSO
+    $sql .= ") AND ID_CURSO = ? ORDER BY LENGTH(palavras_chave) DESC"; // Ordena por relevância
+    
+    // Preparar a consulta
+    $stmt = $pdo->prepare($sql);
+    
+    // Vincular os parâmetros
+    $params = array_merge($words, array_map(function($word) { return "%$word%"; }, $words), [$idCurso]);
+    $stmt->execute($params);
+    
+    // Buscar a resposta
     $result = $stmt->fetch();
     return $result ? $result['resposta'] : null;
 }
 
-// Obtém a conexão com o banco de dados
-$pdo = paramentros::getPDO();
-$resposta = buscar_resposta($pdo, $message, $idCurso);
+// Busca a resposta no banco de dados
+$resposta = buscar_resposta($pdo, $words, $idCurso);
 
 // Se nenhuma palavra-chave foi encontrada, usar resposta padrão
 if ($resposta === null) {
@@ -51,7 +88,8 @@ if ($resposta === null) {
             $resposta = "$user_name, sinto muito, não consegui te entender. Encerrando o chat... Tchauuu!";
             session_unset();
             session_destroy();
-            break;
+            paramentros::send_response($resposta);
+            exit; // Encerra o script após destruir a sessão
     }
 }
 
