@@ -46,7 +46,7 @@ if (isset($_SESSION['opcoes_contextos']) && is_numeric($message)) {
         exit;
     } else {
         // Caso o índice seja inválido
-        paramentros::send_response("Tá em dúvida? Escolhe uma das opções listadas, tranquilo?");
+        paramentros::send_response("Você errou! Escolhe uma das opções listadas acima.");
         exit;
     }
 }
@@ -102,7 +102,7 @@ function buscar_contextos($pdo, $message) {
         $_SESSION['opcoes_contextos'] = $results;
 
         // Concatena a introdução e as opções em uma única mensagem
-        $response = "Fechou! Olha essas sugestões e escolhe a que faz mais sentido...\n\n"
+        $response = "Hum... Entendi! Separei algumas opções que podem te ajudar:\n\n"
             . implode("\n", $contextos) 
             . "\n\nPor favor, escolha uma das " . count($contextos) . " opções listadas acima!";
 

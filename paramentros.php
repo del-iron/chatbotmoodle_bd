@@ -1,8 +1,9 @@
 <?php
 class paramentros {
     // Definições de constantes
-    const WELCOME_MESSAGE = "Olá, eu sou Toinha! Como posso te ajudar hoje?";
+    const WELCOME_MESSAGE = "Olá, eu sou Adesinha! Como posso te ajudar hoje?";
     const DEFAULT_USER_NAME = "Usuário";
+    const RESP_USUARIO = "Te ajudo com mais alguma coisa?";
 
     // Credenciais do banco de dados
     private static $dbHost = 'localhost';
