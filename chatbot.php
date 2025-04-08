@@ -85,7 +85,7 @@ function buscar_contextos($pdo, $message) {
         WHERE MATCH(pk.palavra) AGAINST(? IN NATURAL LANGUAGE MODE)
         GROUP BY pr.contexto
         ORDER BY relevancia DESC
-        LIMIT 5
+        LIMIT 10
     ";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$message, $message]);
@@ -137,7 +137,7 @@ function buscar_resposta($pdo, $message) {
         INNER JOIN palavras_chave pk ON pr.id = pk.pergunta_id
         WHERE MATCH(pk.palavra) AGAINST(? IN NATURAL LANGUAGE MODE)
         ORDER BY relevancia DESC
-        LIMIT 5
+        LIMIT 10
     ";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$message, $message]);
