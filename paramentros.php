@@ -6,7 +6,7 @@ class paramentros {
 
     // Credenciais do banco de dados
     private static $dbHost = 'localhost';
-    private static $dbName = 'chatbotmoodle_bd';
+    private static $dbName = 'chatbot_moodle';
     private static $dbUser = 'root';
     private static $dbPass = '';
     private static $dbCharset = 'utf8mb4';
@@ -29,6 +29,7 @@ class paramentros {
 
     // Função para enviar resposta e encerrar o script
     public static function send_response($response) {
+        header("Content-Type: text/html; charset=UTF-8"); // Define o cabeçalho como HTML
         echo $response;
         exit;
     }

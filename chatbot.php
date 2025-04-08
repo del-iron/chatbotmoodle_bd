@@ -1,12 +1,20 @@
 <?php
 header("Content-Type: text/html; charset=UTF-8");
-session_start();  // Inicia a sessão
+session_start();
 
 include __DIR__ . '/paramentros.php';
 
 // Inicializa erro_count se ainda não estiver definido
 if (!isset($_SESSION['erro_count'])) {
     $_SESSION['erro_count'] = 0;
+}
+
+// Obtém a conexão com o banco de dados (mova para o início)
+$pdo = paramentros::getPDO();
+
+if (!$pdo) {
+    paramentros::send_response("Erro ao conectar ao banco de dados. Tente novamente mais tarde.");
+    exit;
 }
 
 // Verifica se o chat acabou de ser aberto
@@ -20,66 +28,153 @@ if (!isset($_SESSION["chat_started"])) {
 // Obtém a mensagem do usuário
 $message = isset($_POST["message"]) ? strtolower(trim($_POST["message"])) : "";
 
-// Transforma a mensagem em um array de palavras
-$words = explode(' ', $message);
+// Verifica se o usuário está respondendo a uma lista de contextos
+if (isset($_SESSION['opcoes_contextos']) && is_numeric($message)) {
+    $opcoes = $_SESSION['opcoes_contextos'];
+    $indice = (int)$message - 1; // Converte a escolha do usuário para índice do array
+
+    if (isset($opcoes[$indice])) {
+        // Busca a resposta correspondente ao contexto escolhido
+        $contexto = $opcoes[$indice]['contexto'];
+        $resposta = buscar_resposta_por_contexto($pdo, $contexto);
+
+        // Limpa os contextos da sessão
+        unset($_SESSION['opcoes_contextos']);
+
+        // Envia a resposta ao usuário
+        paramentros::send_response($resposta);
+        exit;
+    } else {
+        // Caso o índice seja inválido
+        paramentros::send_response("Num entendi não... escolhe uma das opções listadas, tá bom?");
+        exit;
+    }
+}
+
+// Verifica se o usuário está respondendo a uma lista de opções
+if (isset($_SESSION['opcoes_respostas']) && is_numeric($message)) {
+    $opcoes = $_SESSION['opcoes_respostas'];
+    $indice = (int)$message - 1; // Converte a escolha do usuário para índice do array
+
+    if (isset($opcoes[$indice])) {
+        // Retorna a resposta correspondente à escolha do usuário
+        $resposta = $opcoes[$indice]['resposta'];
+
+        // Limpa as opções da sessão
+        unset($_SESSION['opcoes_respostas']);
+
+        // Envia a resposta ao usuário
+        paramentros::send_response($resposta);
+        exit;
+    } else {
+        // Caso o índice seja inválido
+        paramentros::send_response("Errou! Essa opção não existe... vê direitinho e tenta de novo, tá bom?");
+        exit;
+    }
+}
 
 // Define o nome do usuário
 $user_name = paramentros::DEFAULT_USER_NAME;
 
-// Define o ID do curso
-$idCurso = 18;
-
-// Obtém a conexão com o banco de dados
-$pdo = paramentros::getPDO();
-
-if (!$pdo) {
-    // Se não houver conexão com o banco de dados, envia uma mensagem de erro
-    paramentros::send_response("Erro ao conectar ao banco de dados. Tente novamente mais tarde.");
-    exit;
-}
-
-function buscar_resposta($pdo, $words, $idCurso) {
-    // Construir a consulta SQL
-    $sql = "SELECT * FROM respostas WHERE (";
-    
-    // Adicionar condições para FIND_IN_SET
-    $findInSetConditions = array_map(function($word) {
-        return "FIND_IN_SET(?, palavras_chave)";
-    }, $words);
-    $sql .= implode(' OR ', $findInSetConditions);
-    
-    // Adicionar condições para LIKE
-    $sql .= " OR ";
-    $likeConditions = array_map(function($word) {
-        return "pergunta LIKE ?";
-    }, $words);
-    $sql .= implode(' OR ', $likeConditions);
-    
-    // Adicionar filtro por ID_CURSO
-    $sql .= ") AND ID_CURSO = ? ORDER BY LENGTH(palavras_chave) DESC"; // Ordena por relevância
-    
-    // Preparar a consulta
+function buscar_contextos($pdo, $message) {
+    $sql = "
+        SELECT DISTINCT pr.contexto, 
+               MAX(MATCH(pk.palavra) AGAINST(? IN NATURAL LANGUAGE MODE)) AS relevancia
+        FROM perguntas_respostas pr
+        INNER JOIN palavras_chave pk ON pr.id = pk.pergunta_id
+        WHERE MATCH(pk.palavra) AGAINST(? IN NATURAL LANGUAGE MODE)
+        GROUP BY pr.contexto
+        ORDER BY relevancia DESC
+        LIMIT 5
+    ";
     $stmt = $pdo->prepare($sql);
-    
-    // Vincular os parâmetros
-    $params = array_merge($words, array_map(function($word) { return "%$word%"; }, $words), [$idCurso]);
-    $stmt->execute($params);
-    
-    // Buscar a resposta
-    $result = $stmt->fetch();
-    return $result ? $result['resposta'] : null;
+    $stmt->execute([$message, $message]);
+    $results = $stmt->fetchAll();
+
+    if (count($results) > 1) {
+        $contextos = [];
+        foreach ($results as $index => $result) {
+            // Adiciona cada contexto com numeração
+            $contextos[] = ($index + 1) . ". " . $result['contexto'];
+        }
+
+        // Armazena os contextos na sessão para a próxima interação
+        $_SESSION['opcoes_contextos'] = $results;
+
+        // Concatena a introdução e as opções em uma única mensagem
+        $response = "Tá, entendi… pra não complicar, vou te mostrar algumas alternativas bem práticas. Aí é só escolher o que faz mais sentido pra você!\n\n"
+            . implode("\n", $contextos) 
+            . "\n\nPor favor, escolha uma das " . count($contextos) . " opções listadas acima!";
+
+        // Retorna a mensagem completa
+        return $response;
+    }
+
+    // Retorna o único contexto encontrado ou null
+    return $results[0]['contexto'] ?? null;
 }
 
-// Busca a resposta no banco de dados
-$resposta = buscar_resposta($pdo, $words, $idCurso);
+function buscar_resposta_por_contexto($pdo, $contexto) {
+    $sql = "SELECT resposta FROM perguntas_respostas WHERE contexto = ? LIMIT 1";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$contexto]);
+    $result = $stmt->fetch();
 
-// Se nenhuma palavra-chave foi encontrada, usar resposta padrão
+    if ($result) {
+        // Envia a resposta como uma fala separada
+        paramentros::send_response($result['resposta']);
+        exit;
+    }
+
+    return null;
+}
+
+function buscar_resposta($pdo, $message) {
+    $sql = "
+        SELECT DISTINCT pr.resposta, 
+               MATCH(pk.palavra) AGAINST(? IN NATURAL LANGUAGE MODE) AS relevancia
+        FROM perguntas_respostas pr
+        INNER JOIN palavras_chave pk ON pr.id = pk.pergunta_id
+        WHERE MATCH(pk.palavra) AGAINST(? IN NATURAL LANGUAGE MODE)
+        ORDER BY relevancia DESC
+        LIMIT 5
+    ";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$message, $message]);
+    $results = $stmt->fetchAll();
+
+    if (count($results) > 1) {
+        $respostas = [];
+        foreach ($results as $index => $result) {
+            // Adiciona cada resposta com numeração
+            $respostas[] = ($index + 1) . ". " . $result['resposta'];
+        }
+
+        // Armazena as opções na sessão para a próxima interação
+        $_SESSION['opcoes_respostas'] = $results;
+
+        // Armazena a primeira resposta na sessão para futuras referências
+        $_SESSION['ultima_resposta'] = $results[0]['resposta'];
+
+        // Retorna as opções para o usuário - 3
+        return "Me parece que o que você perguntou tem a ver com uma dessas possibilidades:" 
+        . implode("\n", $respostas) . "\n"
+        . "Diz aí o número que a gente segue em frente!";
+    }
+
+    // Retorna a única resposta encontrada ou null
+    return $results[0]['resposta'] ?? null;
+}
+
+// Busca os contextos no banco de dados
+$resposta = buscar_contextos($pdo, $message);
+
+// Se nenhum contexto foi encontrado, usar resposta padrão
 if ($resposta === null) {
     $_SESSION['erro_count']++;
-
     switch ($_SESSION['erro_count']) {
         case 1:
-            $resposta = "$user_name, desculpe, não encontrei uma resposta para isso. Reformule sua pergunta, por favor!";
+            $resposta = "$user_name, desculpe, não encontrei um contexto para isso. Reformule sua pergunta, por favor!";
             break;
         case 2:
             $resposta = "$user_name, não consegui entender sua solicitação. Poderia reformular de outra maneira?";
@@ -88,18 +183,18 @@ if ($resposta === null) {
             $resposta = "$user_name, sinto muito, não consegui te entender. Encerrando o chat... Tchauuu!";
             session_unset();
             session_destroy();
+            // Simula resposta humana antes de encerrar
+            usleep(rand(2000000, 4000000)); // Entre 2 e 4 segundos
             paramentros::send_response($resposta);
-            exit; // Encerra o script após destruir a sessão
+            exit;
     }
 }
 
-// Simula resposta humana
+// Simula resposta humana antes de enviar a resposta
 usleep(rand(2000000, 4000000)); // Entre 2 e 4 segundos
 
-// Inserir a mensagem do usuário e a resposta do bot no banco de dados
-$stmt = $pdo->prepare("INSERT INTO messages (user_message, bot_response) VALUES (?, ?)");
-$stmt->execute([$message, $resposta]);
+// Substitui \n por \n para garantir que o frontend interprete corretamente
+$resposta = str_replace("\n", "\n", $resposta);
 
-// Envia a resposta para o usuário
 paramentros::send_response($resposta);
 ?>
