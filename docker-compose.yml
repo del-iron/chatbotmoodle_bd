@@ -1,42 +1,27 @@
-version: "3"
 services:
-  mysql:
-    image: 'mariadb:latest'
-    restart: unless-stopped
-    environment:
-      - MYSQL_ROOT_PASSWORD=your_root_password  # Substitua pela senha correta
-      - MYSQL_DATABASE=chatbotmoodle_bd
-      - MYSQL_USER=root
-      - MYSQL_PASSWORD=your_root_password  # Substitua pela senha correta
-    ports:
-      - '3306:3306'
-    volumes:
-      - C:/path/to/your/volume/mysql/lib/mysql:/var/lib/mysql
-      - C:/path/to/your/volume/mysql/etc/mysql/conf.d:/etc/mysql/conf.d
-
   web:
-    build: .
-    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chatbot_web
     ports:
-      - "80:80"
-      - "443:443"
+      - "8080:80"  # Porta 8080 no host mapeada para a porta 80 no contêiner
     volumes:
-      - C:/path/to/your/volume/php/php.ini:/usr/local/etc/php/php.ini
-      - C:/path/to/your/volume/moodledata:/var/moodledata
-      - C:/path/to/your/volume/html:/var/www/html
-      - C:/path/to/your/volume/apache2/sites-enabled:/etc/apache2/sites-enabled
-      - C:/path/to/your/volume/apache2/sites-available:/etc/apache2/sites-available
+      - ./volumes/html:/var/www/html  # Certifique-se de que os arquivos estão aqui
     depends_on:
-      - mysql
+      - db
 
-  pgadmin:
-    image: dpage/pgadmin4
+  db:
+    image: mysql:8.0
+    container_name: chatbot_db
+    restart: always
     environment:
-      PGADMIN_DEFAULT_EMAIL: esp.coronavirus@gmail.com
-      PGADMIN_DEFAULT_PASSWORD: abVYbdpXWW9y7YPY
-    volumes:
-      - C:/path/to/your/volume/pgadmin:/root/.pgadmin
-    restart: unless-stopped
+      MYSQL_ROOT_PASSWORD: root  # Definindo apenas a senha do root
+      MYSQL_DATABASE: chatbot_moodle
     ports:
-      - "81:80"
-      - "444:443"
+      - "3310:3306"  # Mapeia a porta 3310 do host para a porta 3306 do contêiner (para evitar conflito)
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:

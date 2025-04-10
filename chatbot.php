@@ -46,7 +46,7 @@ if (isset($_SESSION['opcoes_contextos']) && is_numeric($message)) {
         exit;
     } else {
         // Caso o índice seja inválido
-        paramentros::send_response("Você errou! Escolhe uma das opções listadas acima.");
+        paramentros::send_response("Ops! Parece que essa opção não é válida. Por favor, escolha uma das opções listadas acima");
         exit;
     }
 }

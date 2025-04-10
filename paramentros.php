@@ -6,10 +6,10 @@ class paramentros {
     const RESP_USUARIO = "Te ajudo com mais alguma coisa?";
 
     // Credenciais do banco de dados
-    private static $dbHost = 'localhost';
+    private static $dbHost = 'db'; // Nome do serviço MySQL no docker-compose.yml
     private static $dbName = 'chatbot_moodle';
     private static $dbUser = 'root';
-    private static $dbPass = '';
+    private static $dbPass = 'root';
     private static $dbCharset = 'utf8mb4';
 
     // Método para obter a conexão com o banco de dados
