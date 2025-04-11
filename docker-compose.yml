@@ -5,23 +5,24 @@ services:
       dockerfile: Dockerfile
     container_name: chatbot_web
     ports:
-      - "8080:80"  # Porta 8080 no host mapeada para a porta 80 no contêiner
+      - "8080:80"
     volumes:
-      - ./volumes/html:/var/www/html  # Certifique-se de que os arquivos estão aqui
+      - ./volumes/html:/var/www/html
     depends_on:
       - db
 
   db:
     image: mysql:8.0
     container_name: chatbot_db
-    restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root  # Definindo apenas a senha do root
+      MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: chatbot_moodle
     ports:
-      - "3310:3306"  # Mapeia a porta 3310 do host para a porta 3306 do contêiner (para evitar conflito)
+    
+      - "3310:3306"
     volumes:
       - db_data:/var/lib/mysql
+      - ./database/chatbot_moodle.sql:/docker-entrypoint-initdb.d/chatbot_moodle.sql
 
 volumes:
   db_data:

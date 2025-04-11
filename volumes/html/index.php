@@ -1,5 +1,5 @@
 <?php
-// Redireciona para o chatbot
-header("Location: ../index.html");
+// Redireciona para a interface do chatbot
+header("Location: index.html");
 exit;
 ?>
